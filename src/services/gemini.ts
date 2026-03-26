@@ -2,7 +2,7 @@ import { GoogleGenAI, Type, GenerateContentResponse, Modality } from "@google/ge
 import { AIResponse, ChatMessage } from "../types";
 import { Language, languageNames } from "../translations";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
+const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "" });
 
 export async function identifyPlant(base64Image: string, language: Language = 'en'): Promise<AIResponse> {
   const model = "gemini-3-flash-preview";
