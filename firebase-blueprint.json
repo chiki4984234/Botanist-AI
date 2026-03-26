@@ -1,0 +1,67 @@
+{
+  "entities": {
+    "PlantScan": {
+      "title": "Plant Scan",
+      "description": "A record of a plant scan performed by a user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The UID of the user who performed the scan." },
+        "imageUrl": { "type": "string", "description": "Base64 or URL of the scanned image." },
+        "plantName": { "type": "string" },
+        "scientificName": { "type": "string" },
+        "confidence": { "type": "number" },
+        "healthStatus": { "type": "string", "enum": ["Excellent", "Good", "Fair", "Poor"] },
+        "care": {
+          "type": "object",
+          "properties": {
+            "watering": { "type": "string" },
+            "sunlight": { "type": "string" },
+            "soil": { "type": "string" },
+            "fertilizer": { "type": "string" }
+          }
+        },
+        "disease": {
+          "type": "object",
+          "properties": {
+            "detected": { "type": "boolean" },
+            "name": { "type": "string" },
+            "symptoms": { "type": "string" },
+            "symptomsList": { "type": "array", "items": { "type": "string" } },
+            "treatment": { "type": "string" },
+            "treatmentSteps": { "type": "array", "items": { "type": "string" } },
+            "prevention": { "type": "string" }
+          }
+        },
+        "timestamp": { "type": "number" }
+      },
+      "required": ["userId", "imageUrl", "plantName", "timestamp"]
+    },
+    "Reminder": {
+      "title": "Reminder",
+      "description": "A care reminder for a plant.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "plantId": { "type": "string" },
+        "plantName": { "type": "string" },
+        "task": { "type": "string" },
+        "frequency": { "type": "string", "enum": ["Daily", "Weekly", "Bi-weekly", "Monthly"] },
+        "time": { "type": "string", "description": "HH:mm format" },
+        "lastCompleted": { "type": "number" },
+        "nextDue": { "type": "number" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["userId", "plantId", "plantName", "task", "frequency", "time", "nextDue", "active"]
+    }
+  },
+  "firestore": {
+    "/scans/{scanId}": {
+      "schema": "PlantScan",
+      "description": "Collection of plant scans."
+    },
+    "/reminders/{reminderId}": {
+      "schema": "Reminder",
+      "description": "Collection of plant care reminders."
+    }
+  }
+}

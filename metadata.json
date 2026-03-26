@@ -1,0 +1,5 @@
+{
+  "name": "FloraScan AI",
+  "description": "AI-powered plant identification, disease detection, and care guide app.",
+  "requestFramePermissions": ["camera", "microphone"]
+}

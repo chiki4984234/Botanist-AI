@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: scans
+    // Document ID: scanId (auto-generated)
+    // Fields:
+    //   - userId: string (required) - UID of the user
+    //   - imageUrl: string (required) - Base64 or URL
+    //   - plantName: string (required)
+    //   - scientificName: string (required)
+    //   - confidence: number (required)
+    //   - healthStatus: string (required) - 'Excellent', 'Good', 'Fair', 'Poor'
+    //   - care: map (required)
+    //   - disease: map (required)
+    //     - detected: bool (required)
+    //     - name: string (optional)
+    //     - symptoms: string (optional)
+    //     - symptomsList: list (optional)
+    //     - treatment: string (optional)
+    //     - treatmentSteps: list (optional)
+    //     - prevention: string (optional)
+    //   - timestamp: number (required)
+    //   - chatHistory: list (optional) - Array of ChatMessage objects
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidDisease(disease) {
+      return disease is map &&
+             disease.detected is bool &&
+             (!('name' in disease) || disease.name is string) &&
+             (!('symptoms' in disease) || disease.symptoms is string) &&
+             (!('symptomsList' in disease) || disease.symptomsList is list) &&
+             (!('treatment' in disease) || disease.treatment is string) &&
+             (!('treatmentSteps' in disease) || disease.treatmentSteps is list) &&
+             (!('prevention' in disease) || disease.prevention is string);
+    }
+
+    function isValidScan(data) {
+      return data.userId is string &&
+             data.imageUrl is string &&
+             data.plantName is string &&
+             data.scientificName is string &&
+             data.confidence is number &&
+             data.healthStatus in ['Excellent', 'Good', 'Fair', 'Poor'] &&
+             data.care is map &&
+             isValidDisease(data.disease) &&
+             data.timestamp is number &&
+             (!('chatHistory' in data) || data.chatHistory is list);
+    }
+
+    function isValidReminder(data) {
+      return data.userId is string &&
+             data.plantId is string &&
+             data.plantName is string &&
+             data.task is string &&
+             data.frequency in ['Daily', 'Weekly', 'Bi-weekly', 'Monthly'] &&
+             data.time is string &&
+             (!('lastCompleted' in data) || data.lastCompleted is number) &&
+             data.nextDue is number &&
+             data.active is bool;
+    }
+
+    match /scans/{scanId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId) && isValidScan(request.resource.data);
+      allow update: if isOwner(resource.data.userId) && 
+                      request.resource.data.userId == resource.data.userId &&
+                      isValidScan(request.resource.data);
+      allow delete: if isOwner(resource.data.userId);
+    }
+
+    match /reminders/{reminderId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if isOwner(request.resource.data.userId) && isValidReminder(request.resource.data);
+      allow update: if isOwner(resource.data.userId) && 
+                      request.resource.data.userId == resource.data.userId &&
+                      isValidReminder(request.resource.data);
+      allow delete: if isOwner(resource.data.userId);
+    }
+  }
+}
